@@ -10,7 +10,6 @@ public class SudokuService(HttpClient httpClient) : ISudokuService
 {
     public async Task<bool> AddSudokuBoard(SudokuBoardRequest request)
     {
-        await Task.Delay(4000);
         var response = await httpClient.PostAsJsonAsync("/sudoku/add", request);
         return response.IsSuccessStatusCode;
     }
