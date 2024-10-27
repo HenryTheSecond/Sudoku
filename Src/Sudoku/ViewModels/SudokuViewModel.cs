@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 
 namespace Sudoku.ViewModels;
 
@@ -34,12 +33,14 @@ public class SudokuViewModel : INotifyPropertyChanged
     public ObservableCollection<SudokuCell> Board { get; set; } = new();
     public ICommand SolveCommand { get; }
     public ICommand NewGameCommand { get; }
+    public ICommand HintCommand { get; }
     public SudokuViewModel(int size, ISudokuService sudokuService)
     {
         this.sudokuService = sudokuService;
         Size = size;
         InitializeBoard();
         NewGameCommand = new RelayCommand(InitializeBoard);
+        HintCommand = new RelayCommand(ShowHint);
         SolveCommand = new AsyncRelayCommand(SolveBoard);
     }
 
@@ -52,12 +53,9 @@ public class SudokuViewModel : INotifyPropertyChanged
         {
             for (int j = 0; j < BoardSize; j++)
             {
-                Board.Add(new SudokuCell
-                {
-                    Value = board[i, j],
-                    IsEditable = board[i, j] != 0,
-                    Background = new SolidColorBrush(board[i, j] == 0 ? Colors.White : Colors.Gray)
-                });
+                Board.Add(new SudokuCell(board[i, j], 
+                    board[i, j] != 0, 
+                    board[i, j] == 0 ? SudokuCell.EditableBackground : SudokuCell.UneditableBackground));
             }
         }
     }
@@ -80,16 +78,11 @@ public class SudokuViewModel : INotifyPropertyChanged
         // Solve the sudoku board if all the cells match the target values
         for(int i = 0; i < Board.Count; i++)
         {
-            if (Board[i].Value == 0)
+            if (!Board[i].IsReadOnly)
             {
                 int row = i / BoardSize;
                 int col = i % BoardSize;
-                Board[i] = new SudokuCell
-                {
-                    Value = solver.GetValue(row, col),
-                    IsEditable = true,
-                    Background = new SolidColorBrush(Colors.White)
-                };
+                Board[i] = new SudokuCell(solver.GetValue(row, col), true, SudokuCell.EditableBackground);
             }
         }
         await SaveSolvedSudokuToDatabase();
@@ -118,6 +111,38 @@ public class SudokuViewModel : INotifyPropertyChanged
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private void ShowHint()
+    {
+        // We prioritize in finding and adjusting incorrect cell than fulfilling empty cell
+        int incorrectCell = -1;
+        int emptyCell = -1;
+        for(int i = 0; i < Board.Count; i++)
+        {
+            int row = i / BoardSize;
+            int col = i % BoardSize;
+            if (Board[i].Value == 0)
+            {
+                if(emptyCell == -1)
+                {
+                    emptyCell = i;
+                }
+            }
+            else if (Board[i].Value != solver.GetValue(row, col))
+            {
+                incorrectCell = i;
+                break;
+            }
+        }
+
+        if(incorrectCell != -1 || emptyCell != -1)
+        {
+            var modifiedCell = incorrectCell != -1 ? incorrectCell : emptyCell;
+            int row = modifiedCell / BoardSize;
+            int col = modifiedCell % BoardSize;
+            Board[modifiedCell] = new SudokuCell(solver.GetValue(row, col), false, SudokuCell.HintBackground);
         }
     }
 

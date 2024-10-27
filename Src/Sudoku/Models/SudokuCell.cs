@@ -4,11 +4,14 @@ using System.Windows.Media;
 
 namespace Sudoku.Models;
 
-public class SudokuCell
+public class SudokuCell(int value, bool isReadOnly, Brush background)
 {
-    public int Value { get; set; }
-    public bool IsEditable { get; set; }
-    public Brush Background { get; set; } = new SolidColorBrush(Colors.White);
+    public static readonly Brush EditableBackground = new SolidColorBrush(Colors.White);
+    public static readonly Brush UneditableBackground = new SolidColorBrush(Colors.Gray);
+    public static readonly Brush HintBackground = new SolidColorBrush(Colors.Yellow);
+    public int Value { get; set; } = value;
+    public bool IsReadOnly { get; set; } = isReadOnly;
+    public Brush Background { get; set; } = background;
 }
 
 public class CellValueConverter : IValueConverter

@@ -45,6 +45,7 @@
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                 <Button Content="New Game" Command="{Binding NewGameCommand}" Margin="5" FontSize="14" Background="DarkBlue" Foreground="White" Padding="8"/>
+                <Button Content="Hint" Command="{Binding HintCommand}" Margin="5" FontSize="14" Background="DarkBlue" Foreground="White" Padding="8"/>
                 <Button Content="Solve" Command="{Binding SolveCommand}" Margin="5" FontSize="14" Background="DarkBlue" Foreground="White" Padding="8"/>
             </StackPanel>
         </Grid>
